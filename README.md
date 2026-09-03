@@ -1,6 +1,6 @@
 # Deep Learning with PyTorch - A Complete Guide
 
-106 annotated notebooks taking you from matrix multiplication to GANs and style
+107 annotated notebooks taking you from matrix multiplication to GANs and style
 transfer. Every notebook opens with what it teaches and why it comes where it
 does; every non-trivial cell carries a comment explaining what it does and what
 to look for in the output.
@@ -41,7 +41,8 @@ The course is one argument, repeated at increasing scale:
 |---|---|---|
 | 00 | `Math.ipynb` | Transpose, matmul, softmax, entropy, argmax, mean/variance - in NumPy and PyTorch |
 | 01 | `GradientDesent.ipynb` | Gradient descent by hand in 1D and 2D; local minima, stationary points, adaptive learning rates |
-| - | `Neural Network Backpropagation` | An MLP built from scratch in NumPy: forward pass, chain rule, weight updates, XOR |
+| - | `Neural_Network_Backpropagation.ipynb` | An MLP built from scratch in NumPy: forward pass, chain rule, weight updates, XOR |
+| - | `FNN.ipynb` | A two-hidden-layer FNN on Iris in pure NumPy: ReLU + softmax, one-hot targets, hand-derived backprop, gradient descent |
 
 ### ANNs - the training loop
 | # | Notebook | What it covers |
