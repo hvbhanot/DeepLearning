@@ -1,0 +1,292 @@
+{
+ "nbformat": 4,
+ "nbformat_minor": 0,
+ "metadata": {
+  "colab": {
+   "provenance": [],
+   "authorship_tag": "ABX9TyNThxP1Jj5UoCVJqNw+YZXx"
+  },
+  "kernelspec": {
+   "name": "python3",
+   "display_name": "Python 3"
+  },
+  "language_info": {
+   "name": "python"
+  }
+ },
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "guide": "intro"
+   },
+   "source": [
+    "# 05 - Counting Parameters: Deep vs Wide\n",
+    "\n",
+    "**Section:** ANNs | **Prereqs:** `ANNs/NNClasses.ipynb` | **Next:** `ANNs/IrisANN`\n",
+    "\n",
+    "'How big is this model?' has an exact answer. For a `Linear(in, out)` layer:\n",
+    "\n",
+    "    parameters = in * out   (weights)   +   out   (biases)\n",
+    "\n",
+    "Two networks with the same layer count can differ by orders of magnitude in\n",
+    "parameters, and parameters - not layers - drive memory use, overfitting risk,\n",
+    "and training time.\n",
+    "\n",
+    "**Deep vs wide** is a real trade-off, not a ranking: depth composes features\n",
+    "(edges -> shapes -> objects), width holds more features per level. The\n",
+    "experiment in `ANNs/DepthVsBreadth.ipynb` measures which wins on Iris."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {
+    "id": "ADN-dEV29V0r",
+    "executionInfo": {
+     "status": "ok",
+     "timestamp": 1749611936473,
+     "user_tz": 300,
+     "elapsed": 7,
+     "user": {
+      "displayName": "Harsh Vardhan Bhanot",
+      "userId": "08538087070556807964"
+     }
+    },
+    "guide": true
+   },
+   "outputs": [],
+   "source": [
+    "# Only torch is needed - we are inspecting models, not training them.\n",
+    "import torch\n",
+    "import torch.nn as nn\n",
+    "import numpy as np"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "# Two architectures to compare: deep (three narrow layers) and wide (two fat\n",
+    "# ones). Note neither has activations, so both collapse to a single linear map -\n",
+    "# fine here, since we are only counting parameters.\n",
+    "model_deep = nn.Sequential(\n",
+    "    nn.Linear(2,2),\n",
+    "    nn.Linear(2,2),\n",
+    "    nn.Linear(2,3),\n",
+    ")\n",
+    "\n",
+    "model_wide = nn.Sequential(\n",
+    "    nn.Linear(2,4),\n",
+    "    nn.Linear(4,2)\n",
+    ")\n",
+    "\n",
+    "model_deep,model_wide"
+   ],
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "DD97h2kK9gTH",
+    "executionInfo": {
+     "status": "ok",
+     "timestamp": 1749611936497,
+     "user_tz": 300,
+     "elapsed": 22,
+     "user": {
+      "displayName": "Harsh Vardhan Bhanot",
+      "userId": "08538087070556807964"
+     }
+    },
+    "outputId": "eca37e44-7d7b-4b65-ed95-25656f7f9e06",
+    "guide": true
+   },
+   "execution_count": 10,
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/plain": [
+       "(Sequential(\n",
+       "   (0): Linear(in_features=2, out_features=2, bias=True)\n",
+       "   (1): Linear(in_features=2, out_features=2, bias=True)\n",
+       "   (2): Linear(in_features=2, out_features=3, bias=True)\n",
+       " ),\n",
+       " Sequential(\n",
+       "   (0): Linear(in_features=2, out_features=4, bias=True)\n",
+       "   (1): Linear(in_features=4, out_features=2, bias=True)\n",
+       " ))"
+      ]
+     },
+     "metadata": {},
+     "execution_count": 10
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "# named_parameters() gives (name, tensor) pairs. Weight shapes read\n",
+    "# (out_features, in_features) - PyTorch stores W transposed, because it computes\n",
+    "# x @ W.T + b.\n",
+    "for i in model_wide.named_parameters():\n",
+    "  print(i)"
+   ],
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "AWHBgrXd98g0",
+    "executionInfo": {
+     "status": "ok",
+     "timestamp": 1749611936510,
+     "user_tz": 300,
+     "elapsed": 12,
+     "user": {
+      "displayName": "Harsh Vardhan Bhanot",
+      "userId": "08538087070556807964"
+     }
+    },
+    "outputId": "2b32c39f-dafb-466e-e927-58a923b4331b",
+    "guide": true
+   },
+   "execution_count": 11,
+   "outputs": [
+    {
+     "output_type": "stream",
+     "name": "stdout",
+     "text": [
+      "('0.weight', Parameter containing:\n",
+      "tensor([[ 0.1956,  0.2410],\n",
+      "        [-0.4278,  0.3203],\n",
+      "        [-0.4101, -0.5881],\n",
+      "        [-0.2044,  0.0478]], requires_grad=True))\n",
+      "('0.bias', Parameter containing:\n",
+      "tensor([ 0.2618, -0.3807, -0.3856, -0.1254], requires_grad=True))\n",
+      "('1.weight', Parameter containing:\n",
+      "tensor([[ 0.0439, -0.0352, -0.4010,  0.4912],\n",
+      "        [ 0.3721,  0.2842, -0.1905, -0.3216]], requires_grad=True))\n",
+      "('1.bias', Parameter containing:\n",
+      "tensor([0.1131, 0.4197], requires_grad=True))\n"
+     ]
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "# parameters() drops the names. This is exactly what you hand the optimizer;\n",
+    "# anything not in this list will never be trained.\n",
+    "for i in model_deep.parameters():\n",
+    "  print(i)"
+   ],
+   "metadata": {
+    "id": "o_deziL8-Kha",
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "executionInfo": {
+     "status": "ok",
+     "timestamp": 1749611949110,
+     "user_tz": 300,
+     "elapsed": 90,
+     "user": {
+      "displayName": "Harsh Vardhan Bhanot",
+      "userId": "08538087070556807964"
+     }
+    },
+    "outputId": "7cb32b50-4ddd-4436-eb1b-d1ce978cbffe",
+    "guide": true
+   },
+   "execution_count": 13,
+   "outputs": [
+    {
+     "output_type": "stream",
+     "name": "stdout",
+     "text": [
+      "Parameter containing:\n",
+      "tensor([[ 0.1477, -0.0245],\n",
+      "        [ 0.2600,  0.2414]], requires_grad=True)\n",
+      "Parameter containing:\n",
+      "tensor([-0.4072,  0.0943], requires_grad=True)\n",
+      "Parameter containing:\n",
+      "tensor([[-0.4783,  0.4132],\n",
+      "        [-0.7064, -0.5311]], requires_grad=True)\n",
+      "Parameter containing:\n",
+      "tensor([-0.4278,  0.4716], requires_grad=True)\n",
+      "Parameter containing:\n",
+      "tensor([[ 0.1712,  0.1485],\n",
+      "        [-0.3649,  0.6984],\n",
+      "        [-0.4843,  0.6130]], requires_grad=True)\n",
+      "Parameter containing:\n",
+      "tensor([0.5381, 0.1259, 0.0613], requires_grad=True)\n"
+     ]
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [
+    "# torchsummary prints per-layer output shapes and a parameter count.\n",
+    "# The tuple is the input shape WITHOUT the batch dimension.\n",
+    "# Compare the totals: the wide model has more parameters despite fewer layers.\n",
+    "# Summery using torch\n",
+    "\n",
+    "from torchsummary import summary\n",
+    "\n",
+    "summary(model_deep, (1000000,2)) # (1,2) is the size of the input matrix"
+   ],
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "KwgRELbD_6tl",
+    "executionInfo": {
+     "status": "ok",
+     "timestamp": 1749612116371,
+     "user_tz": 300,
+     "elapsed": 181,
+     "user": {
+      "displayName": "Harsh Vardhan Bhanot",
+      "userId": "08538087070556807964"
+     }
+    },
+    "outputId": "ace649dd-4241-45fe-b145-26c756a2a65e",
+    "guide": true
+   },
+   "execution_count": 18,
+   "outputs": [
+    {
+     "output_type": "stream",
+     "name": "stdout",
+     "text": [
+      "----------------------------------------------------------------\n",
+      "        Layer (type)               Output Shape         Param #\n",
+      "================================================================\n",
+      "            Linear-1           [-1, 1000000, 2]               6\n",
+      "            Linear-2           [-1, 1000000, 2]               6\n",
+      "            Linear-3           [-1, 1000000, 3]               9\n",
+      "================================================================\n",
+      "Total params: 21\n",
+      "Trainable params: 21\n",
+      "Non-trainable params: 0\n",
+      "----------------------------------------------------------------\n",
+      "Input size (MB): 7.63\n",
+      "Forward/backward pass size (MB): 53.41\n",
+      "Params size (MB): 0.00\n",
+      "Estimated Total Size (MB): 61.04\n",
+      "----------------------------------------------------------------\n"
+     ]
+    }
+   ]
+  },
+  {
+   "cell_type": "code",
+   "source": [],
+   "metadata": {
+    "id": "H8xUOnAcAGhg"
+   },
+   "execution_count": null,
+   "outputs": []
+  }
+ ]
+}
