@@ -1,5 +1,10 @@
 # Deep Learning with PyTorch - A Complete Guide
 
+Reference course: [A deep understanding of deep learning (with Python intro)](https://www.udemy.com/course/deeplearning_x/)
+by Mike X Cohen. The notebooks follow his curriculum; the two from-scratch NumPy
+notebooks in *Foundations* (`Neural_Network_Backpropagation.ipynb`, `FNN.ipynb`)
+are supplements from outside the course.
+
 107 annotated notebooks taking you from matrix multiplication to GANs and style
 transfer. Every notebook opens with what it teaches and why it comes where it
 does; every non-trivial cell carries a comment explaining what it does and what
